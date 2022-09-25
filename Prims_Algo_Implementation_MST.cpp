@@ -1,72 +1,82 @@
 /*
-    link: https://www.geeksforgeeks.org/find-whether-it-is-possible-to-finish-all-tasks-or-not-from-given-dependencies/
-*/
+    link: https://practice.geeksforgeeks.org/problems/minimum-spanning-tree/1#
 
+    sol: https://www.geeksforgeeks.org/prims-minimum-spanning-tree-mst-greedy-algo-5/
+
+    video: https://youtu.be/HnD676J56ak?list=PLgUwDviBIf0rGEWe64KWas0Nryn7SCRWw
+    video (implementation): https://youtu.be/oNTsS8lGDHw?list=PLgUwDviBIf0rGEWe64KWas0Nryn7SCRWw
+
+    steps:
+    1. form 3 array: key, mst, parent
+    2. mark source's node in key as 0.
+    3. pick node which is not part of mst and has min. value in key
+    4. mark it as part of mst
+    5. now iterate to their edges and find min. weight as well as it is not part of mst
+    6. if such edge found mark its parent node (don't change the mst status)
+    7. update the key's value as it will be min. compare to INT_MAX
+    8. repeat from 3.
+*/
 
 
 // ----------------------------------------------------------------------------------------------------------------------- //
 /*
-    using DFS
+    brute force
+
+    TC: O( (N-1) * (N + E) ) => O(N^2)
+    SC: O(N) + O(N) + O(N) => O(N) , for parent, key, mstSet
 */
-// CPP program to check whether we can finish all
-// tasks or not from given dependencies.
-#include <bits/stdc++.h>
+#include<bits/stdc++.h>
 using namespace std;
 
-// Returns adjacency list representation from a list
-// of pairs.
-vector<unordered_set<int> > make_graph(int numTasks,
-    vector<pair<int, int> >& prerequisites)
-{
-    vector<unordered_set<int> > graph(numTasks);
-    for (auto pre : prerequisites)
-        graph[pre.second].insert(pre.first);
-    return graph;
-}
+int main() {
+    int N, m;
+    cin >> N >> m;
+    vector<pair<int, int> > adj[N];
 
-// A DFS based function to check if there is a cycle
-// in the directed graph.
-bool dfs_cycle(vector<unordered_set<int> >& graph, int node,
-    vector<bool>& onpath, vector<bool>& visited)
-{
-    if (visited[node])
-        return false;
-    onpath[node] = visited[node] = true;
-    for (int neigh : graph[node])
-        if (onpath[neigh] || dfs_cycle(graph, neigh, onpath, visited))
-            return true;
-    return onpath[node] = false;
-}
-
-// Main function to check whether possible to finish all tasks or not
-bool canFinish(int numTasks, vector<pair<int, int> >& prerequisites)
-{
-    vector<unordered_set<int> > graph = make_graph(numTasks, prerequisites);
-    vector<bool> onpath(numTasks, false), visited(numTasks, false);
-    for (int i = 0; i < numTasks; i++)
-        if (!visited[i] && dfs_cycle(graph, i, onpath, visited))
-            return false;
-    return true;
-}
-
-int main()
-{
-    int numTasks = 4;
-
-    vector<pair<int, int> > prerequisites;
-
-    // for prerequisites: [[1, 0], [2, 1], [3, 2]]
-
-    prerequisites.push_back(make_pair(1, 0));
-    prerequisites.push_back(make_pair(2, 1));
-    prerequisites.push_back(make_pair(3, 2));
-    if (canFinish(numTasks, prerequisites)) {
-        cout << "Possible to finish all tasks";
-    }
-    else {
-        cout << "Impossible to finish all tasks";
+    int a, b, wt;
+    for (int i = 0; i < m; i++) {
+        cin >> a >> b >> wt;
+        adj[a].push_back(make_pair(b, wt));
+        adj[b].push_back(make_pair(a, wt));
     }
 
+    int parent[N];
+
+    int key[N];
+
+    bool mstSet[N];
+
+    for (int i = 0; i < N; i++)
+        key[i] = INT_MAX, mstSet[i] = false;
+
+
+    key[0] = 0;
+    parent[0] = -1;
+    int ansWeight = 0;
+    for (int count = 0; count < N - 1; count++)
+    {
+
+        int mini = INT_MAX, u;
+
+        for (int v = 0; v < N; v++)
+            if (mstSet[v] == false && key[v] < mini)
+                mini = key[v], u = v;
+
+        // making u the part of mst
+        mstSet[u] = true;
+
+        // checking all the edges of u
+        for (auto it : adj[u]) {
+            int v = it.first;
+            int weight = it.second;
+            if (mstSet[v] == false && weight < key[v])
+                parent[v] = u, key[v] = weight;
+        }
+    }
+
+
+    for (int i = 1; i < N; i++)
+        cout << parent[i] << " - " << i << " \n";
     return 0;
 }
 
@@ -78,67 +88,130 @@ int main()
 
 // ----------------------------------------------------------------------------------------------------------------------- //
 /*
-    using BFS
+    efficient solution
+    using priority_queue
+
+    TC: O( (N + E) * logN) => O(N * logN)
+    SC: O(N) + O(N) + O(N)
 */
-// A BFS based solution to check if we can finish
-// all tasks or not. This solution is mainly based
-// on Kahn's algorithm.
-#include <bits/stdc++.h>
+
+#include<bits/stdc++.h>
 using namespace std;
 
-// Returns adjacency list representation from a list
-// of pairs.
-vector<unordered_set<int> > make_graph(int numTasks,
-    vector<pair<int, int> >& prerequisites)
-{
-    vector<unordered_set<int> > graph(numTasks);
-    for (auto pre : prerequisites)
-        graph[pre.second].insert(pre.first);
-    return graph;
-}
+int main() {
+    int N, m;
+    cin >> N >> m;
+    vector<pair<int, int> > adj[N];
 
-// Finds in-degree of every vertex
-vector<int> compute_indegree(vector<unordered_set<int> >& graph)
-{
-    vector<int> degrees(graph.size(), 0);
-    for (auto neighbors : graph)
-        for (int neigh : neighbors)
-            degrees[neigh]++;
-    return degrees;
-}
-
-// Main function to check whether possible to finish all tasks or not
-bool canFinish(int numTasks, vector<pair<int, int> >& prerequisites)
-{
-    vector<unordered_set<int> > graph = make_graph(numTasks, prerequisites);
-    vector<int> degrees = compute_indegree(graph);
-    for (int i = 0; i < numTasks; i++) {
-        int j = 0;
-        for (; j < numTasks; j++)
-            if (!degrees[j])
-                break;
-        if (j == numTasks)
-            return false;
-        degrees[j] = -1;
-        for (int neigh : graph[j])
-            degrees[neigh]--;
-    }
-    return true;
-}
-
-int main()
-{
-    int numTasks = 4;
-    vector<pair<int, int> > prerequisites;
-    prerequisites.push_back(make_pair(1, 0));
-    prerequisites.push_back(make_pair(2, 1));
-    prerequisites.push_back(make_pair(3, 2));
-    if (canFinish(numTasks, prerequisites)) {
-        cout << "Possible to finish all tasks";
-    }
-    else {
-        cout << "Impossible to finish all tasks";
+    int a, b, wt;
+    for (int i = 0; i < m; i++) {
+        cin >> a >> b >> wt;
+        adj[a].push_back(make_pair(b, wt));
+        adj[b].push_back(make_pair(a, wt));
     }
 
+    int parent[N];
+
+    int key[N];
+
+    bool mstSet[N];
+
+    for (int i = 0; i < N; i++)
+        key[i] = INT_MAX, mstSet[i] = false;
+
+    priority_queue< pair<int, int>, vector <pair<int, int>>, greater<pair<int, int>> > pq;
+
+    key[0] = 0;
+    parent[0] = -1;
+    pq.push({ 0, 0 });
+    // Run the loop till all the nodes have been visited
+    // because in the brute code we checked for mstSet[node] == false while computing the minimum
+    // but here we simply take the minimal from the priority queue, so a lot of times a node might be taken twice
+    // hence its better to keep running till all the nodes have been taken. 
+    // try the following case: 
+    // Credits: Srejan Bera
+    // 6 7 
+    // 0 1 5 
+    // 0 2 10 
+    // 0 3 100 
+    // 1 3 50 
+    // 1 4 200
+    // 3 4 250
+    // 4 5 50 
+    while (!pq.empty())
+    {
+        int u = pq.top().second;
+        pq.pop();
+
+        mstSet[u] = true;
+
+        for (auto it : adj[u]) {
+            int v = it.first;
+            int weight = it.second;
+            if (mstSet[v] == false && weight < key[v]) {
+                parent[v] = u;
+                key[v] = weight;
+                pq.push({ key[v], v });
+            }
+        }
+    }
+
+    for (int i = 1; i < N; i++)
+        cout << parent[i] << " - " << i << " \n";
     return 0;
+}
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------- //
+/*
+    Accepted
+*/
+int spanningTree(int V, vector<vector<int>> adj[])
+{
+    int parent[V];
+    bool mstSet[V];
+    int key[V];
+
+    for (int i = 0; i < V; i++) {
+        key[i] = INT_MAX;
+        mstSet[i] = false;
+    }
+
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+
+    key[0] = 0;
+    parent[0] = -1;
+    pq.push({ 0, 0 });
+
+    int ans = 0;
+
+    while (!pq.empty()) {
+        int u = pq.top().second;
+        pq.pop();
+
+        mstSet[u] = true;
+
+        for (vector<int> p : adj[u]) {
+            int v = p[0];
+            int weight = p[1];
+
+            if (mstSet[v] == false && weight < key[v]) {
+                key[v] = weight;
+                parent[v] = u;
+                pq.push({ weight, v });
+            }
+        }
+    }
+
+    for (int i = 0;i < V;i++) {
+        if (key[i] != INT_MAX) ans += key[i];
+    }
+
+    return ans;
 }
