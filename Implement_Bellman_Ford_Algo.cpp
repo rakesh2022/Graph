@@ -1,16 +1,22 @@
 /*
-    sol: https://www.geeksforgeeks.org/kruskals-minimum-spanning-tree-algorithm-greedy-algo-2/
+    link: https://practice.geeksforgeeks.org/problems/negative-weight-cycle3504/1
 
-    video: https://youtu.be/1KRmCzBl_mQ?list=PLgUwDviBIf0rGEWe64KWas0Nryn7SCRWw
+    sol: https://www.geeksforgeeks.org/detect-negative-cycle-graph-bellman-ford/
+
+    video: https://youtu.be/75yC1vbS8S8?list=PLgUwDviBIf0rGEWe64KWas0Nryn7SCRWw
+
+    djikstra's algo doesn't work for the negative edges
 */
+
+
+
 
 // ----------------------------------------------------------------------------------------------------------------------- //
 /*
-    E is the edges
-
-    TC: O(E logE) + O(E * (4*alpha))    => 1st for sorting, 2nd for checking whether it belong to same component or not
-    SC: O(E) + O(V) + O(V)  => 1st for sorted array, 2nd for parent, 3rd for rank
+    TC: O(N-1) * O(E)
+    SC: O(N)
 */
+
 #include<bits/stdc++.h>
 using namespace std;
 struct node {
@@ -24,30 +30,6 @@ struct node {
     }
 };
 
-bool comp(node a, node b) {
-    return a.wt < b.wt;
-}
-
-int findPar(int u, vector<int>& parent) {
-    if (u == parent[u]) return u;
-    return parent[u] = findPar(parent[u], parent);
-}
-
-void unionn(int u, int v, vector<int>& parent, vector<int>& rank) {
-    u = findPar(u, parent);
-    v = findPar(v, parent);
-    if (rank[u] < rank[v]) {
-        parent[u] = v;
-    }
-    else if (rank[v] < rank[u]) {
-        parent[v] = u;
-    }
-    else {
-        parent[v] = u;
-        rank[u]++;
-    }
-}
-
 int main() {
     int N, m;
     cin >> N >> m;
@@ -57,23 +39,78 @@ int main() {
         cin >> u >> v >> wt;
         edges.push_back(node(u, v, wt));
     }
-    sort(edges.begin(), edges.end(), comp);
 
-    vector<int> parent(N);
-    for (int i = 0;i < N;i++)
-        parent[i] = i;
-    vector<int> rank(N, 0);
+    int src;
+    cin >> src;
 
-    int cost = 0;
-    vector<pair<int, int>> mst;
-    for (auto it : edges) {
-        if (findPar(it.v, parent) != findPar(it.u, parent)) {
-            cost += it.wt;
-            mst.push_back({ it.u, it.v });
-            unionn(it.u, it.v, parent, rank);
+
+    int inf = 10000000;
+    vector<int> dist(N, inf);
+
+    dist[src] = 0;
+
+    for (int i = 1;i <= N - 1;i++) {
+        for (auto it : edges) {
+            if (dist[it.u] + it.wt < dist[it.v]) {
+                dist[it.v] = dist[it.u] + it.wt;
+            }
         }
     }
-    cout << cost << endl;
-    for (auto it : mst) cout << it.first << " - " << it.second << endl;
+
+    // if still reduces means graph is having negative cycle
+    int fl = 0;
+    for (auto it : edges) {
+        if (dist[it.u] + it.wt < dist[it.v]) {
+            cout << "Negative Cycle";
+            fl = 1;
+            break;
+        }
+    }
+
+    // if it doesn't have neg. cycle print the shortest path
+    if (!fl) {
+        for (int i = 0;i < N;i++) {
+            cout << i << " " << dist[i] << endl;
+        }
+    }
+
+    return 0;
+}
+
+/*
+6 7
+3 2 6
+5 3 1
+0 1 5
+1 5 -3
+1 2 -2
+3 4 -2
+2 4 3
+0
+*/
+
+
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------- //
+// [accepted]
+int isNegativeWeightCycle(int n, vector<vector<int>>edges) {
+    int inf = 1e7;
+    vector<int> dist(n, inf);
+
+    for (int i = 0; i < n - 1; i++) {
+        for (vector<int> j : edges) {
+            if (dist[j[0]] + j[2] < dist[j[1]]) {
+                dist[j[1]] = dist[j[0]] + j[2];
+            }
+        }
+    }
+
+    for (vector<int> j : edges) {
+        if (dist[j[0]] + j[2] < dist[j[1]]) {
+            return 1;
+        }
+    }
     return 0;
 }
