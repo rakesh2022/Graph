@@ -1,45 +1,60 @@
+/*
+    link: https://practice.geeksforgeeks.org/problems/alien-dictionary/1
 
- /*
-    link: https://leetcode.com/problems/number-of-operations-to-make-network-connected/
+    sol: https://www.geeksforgeeks.org/given-sorted-dictionary-find-precedence-characters/
 
-    just count the disconnected graph
+    video: https://youtu.be/wMMwRK-w0r4
+
+    steps:
+    1. form graph from given words by comparing (as given they are sorted)
+    2. so form graph such that word from smaller to larger forms edge
+    3. find topological sort
+
+    that's it
 */
 
 
+
+
 // ----------------------------------------------------------------------------------------------------------------------- //
-void dfs(int curr, vector<int> v[], vector<int>& vis) {
+/*
+    TC: O(N + K) + O(N + K), first for forming graph and second for dfs
+    Note that there would be K vertices and at-most (N-1) edges in the graph.
+*/
+void dfs(int curr, string& ans, vector<int>& vis, vector<vector<int>>& g) {
     vis[curr] = 1;
 
-    for (auto i : v[curr]) {
+    for (auto i : g[curr]) {
         if (!vis[i]) {
-            dfs(i, v, vis);
+            dfs(i, ans, vis, g);
         }
     }
+    ans += (curr + 'a');
 }
 
-int makeConnected(int n, vector<vector<int>>& connections) {
-    // if cables(edges) is less than vertex-1 means all computer(vertex) won't connect
-    if (connections.size() < n - 1) return -1;
+string findOrder(string dict[], int N, int K) {
+    vector<vector<int>> g(K);
 
-    vector<int> vis(n, 0);
+    for (int i = 0;i < N - 1;i++) {
+        string a = dict[i];
+        string b = dict[i + 1];
 
-    vector<int> v[n];
-
-    for (int i = 0;i < connections.size();i++) {
-        v[connections[i][0]].push_back(connections[i][1]);
-        v[connections[i][1]].push_back(connections[i][0]);
-    }
-
-    int disconnected = 0;
-
-    for (int i = 0;i < n;i++) {
-        if (!vis[i]) {
-            disconnected++;
-            dfs(i, v, vis);
+        for (int j = 0;j < min(a.size(), b.size());j++) {
+            if (a[j] != b[j]) {
+                g[a[j] - 'a'].push_back(b[j] - 'a');
+                break;
+            }
         }
     }
 
-    // dis -1 as initial network wont count 
-    // the one out of which we will provide cable
-    return disconnected - 1;
+    vector<int> vis(K, 0);
+    string ans = "";
+
+    for (int i = 0;i < K;i++) {
+        if (!vis[i]) {
+            dfs(i, ans, vis, g);
+        }
+    }
+    reverse(ans.begin(), ans.end());
+    return ans;
 }
