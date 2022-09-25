@@ -1,79 +1,89 @@
 /*
-    sol: https://www.geeksforgeeks.org/kruskals-minimum-spanning-tree-algorithm-greedy-algo-2/
+    TSP: travelling salesman problem
 
-    video: https://youtu.be/1KRmCzBl_mQ?list=PLgUwDviBIf0rGEWe64KWas0Nryn7SCRWw
+    link (just for ref.): https://www.geeksforgeeks.org/travelling-salesman-problem-set-1/
+    [read intro of the statement] [diff between Hamiltonian Cycle and TSP]
+
+    The Hamiltoninan cycle problem is to find if there exist a tour that visits
+    every city exactly once. Here we know that Hamiltonian Tour exists (because
+    the graph is complete) and in fact many such tours exist, the problem is to
+    find a minimum weight Hamiltonian Cycle.
+
+
+    problem:
+    given cities and dist. between each pair of cities,
+    find the shortest possible path that visits each cities and return to origin city
+
+    optimization using DP
+
+    video: https://youtu.be/JE0JE8ce1V0
+    [26:42] for time complexity
+
+
 */
+
+
 
 // ----------------------------------------------------------------------------------------------------------------------- //
 /*
-    E is the edges
+    without DP:
+        TC: O( (n-1)! )
 
-    TC: O(E logE) + O(E * (4*alpha))    => 1st for sorting, 2nd for checking whether it belong to same component or not
-    SC: O(E) + O(V) + O(V)  => 1st for sorted array, 2nd for parent, 3rd for rank
+    with DP:    (2^N) as in bitmasking it will go from 0 to (2^N)-1
+        TC: O( (2^N) * N )
+        SC: O( (2^N) * N )
 */
-#include<bits/stdc++.h>
+#include<iostream>
 using namespace std;
-struct node {
-    int u;
-    int v;
-    int wt;
-    node(int first, int second, int weight) {
-        u = first;
-        v = second;
-        wt = weight;
-    }
+
+#define INT_MAX 999999
+
+int n = 4;
+int dist[10][10] = {
+        {0,20,42,25},
+        {20,0,30,34},
+        {42,30,0,10},
+        {25,34,10,0}
 };
+int VISITED_ALL = (1 << n) - 1;
 
-bool comp(node a, node b) {
-    return a.wt < b.wt;
-}
+int dp[16][4];  // dp[2^n][n];
 
-int findPar(int u, vector<int>& parent) {
-    if (u == parent[u]) return u;
-    return parent[u] = findPar(parent[u], parent);
-}
 
-void unionn(int u, int v, vector<int>& parent, vector<int>& rank) {
-    u = findPar(u, parent);
-    v = findPar(v, parent);
-    if (rank[u] < rank[v]) {
-        parent[u] = v;
+int  tsp(int mask, int pos) {
+
+    if (mask == VISITED_ALL) {
+        return dist[pos][0];
     }
-    else if (rank[v] < rank[u]) {
-        parent[v] = u;
+    if (dp[mask][pos] != -1) {
+        return dp[mask][pos];
     }
-    else {
-        parent[v] = u;
-        rank[u]++;
+
+    //Now from current node, we will try to go to every other node and take the min ans
+    int ans = INT_MAX;
+
+    //Visit all the unvisited cities and take the best route
+    for (int city = 0;city < n;city++) {
+
+        if ((mask & (1 << city)) == 0) {
+
+            int newAns = dist[pos][city] + tsp(mask | (1 << city), city);
+            ans = min(ans, newAns);
+        }
+
     }
+
+    return dp[mask][pos] = ans;
 }
 
 int main() {
-    int N, m;
-    cin >> N >> m;
-    vector<node> edges;
-    for (int i = 0;i < m;i++) {
-        int u, v, wt;
-        cin >> u >> v >> wt;
-        edges.push_back(node(u, v, wt));
-    }
-    sort(edges.begin(), edges.end(), comp);
-
-    vector<int> parent(N);
-    for (int i = 0;i < N;i++)
-        parent[i] = i;
-    vector<int> rank(N, 0);
-
-    int cost = 0;
-    vector<pair<int, int>> mst;
-    for (auto it : edges) {
-        if (findPar(it.v, parent) != findPar(it.u, parent)) {
-            cost += it.wt;
-            mst.push_back({ it.u, it.v });
-            unionn(it.u, it.v, parent, rank);
+    /* init the dp array */
+    for (int i = 0;i < (1 << n);i++) {
+        for (int j = 0;j < n;j++) {
+            dp[i][j] = -1;
         }
     }
-    cout << cost << endl;
-    for (auto it : mst) cout << it.first << " - " << it.second << endl;
+    cout << "Travelling Saleman Distance is " << tsp(1, 0);
+
     return 0;
 }
