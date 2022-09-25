@@ -1,79 +1,120 @@
 /*
-    sol: https://www.geeksforgeeks.org/kruskals-minimum-spanning-tree-algorithm-greedy-algo-2/
+    [shortest path finding algo]
 
-    video: https://youtu.be/1KRmCzBl_mQ?list=PLgUwDviBIf0rGEWe64KWas0Nryn7SCRWw
+    link: https://practice.geeksforgeeks.org/problems/implementing-floyd-warshall2042/1
+
+    video: https://youtu.be/nV_wOZnhbog
+    => floyd warshalls can detect negative edge cycle [6:02]
+    => including the adjacent node wont help as it will already given in adj. matrix [8:40]
+
+    sol (just refer the comments in code): https://www.geeksforgeeks.org/floyd-warshall-algorithm-dp-16/
+
+    logic:
+    if visiting via K then formula will be : d[i][j] = min(d[i][j], d[i][k]+d[k][j]);
 */
+
+
+
 
 // ----------------------------------------------------------------------------------------------------------------------- //
 /*
-    E is the edges
-
-    TC: O(E logE) + O(E * (4*alpha))    => 1st for sorting, 2nd for checking whether it belong to same component or not
-    SC: O(E) + O(V) + O(V)  => 1st for sorted array, 2nd for parent, 3rd for rank
+    TC: O(V^3)
+    SC: O(V^2)
 */
 #include<bits/stdc++.h>
 using namespace std;
-struct node {
-    int u;
-    int v;
-    int wt;
-    node(int first, int second, int weight) {
-        u = first;
-        v = second;
-        wt = weight;
-    }
-};
 
-bool comp(node a, node b) {
-    return a.wt < b.wt;
+#define V 6		//No of vertices
+
+void floyd_warshall(int graph[V][V])
+{
+    int dist[V][V];
+
+    //Assign all values of graph to allPairs_SP
+    for (int i = 0;i < V;++i)
+        for (int j = 0;j < V;++j)
+            dist[i][j] = graph[i][j];
+
+    //Find all pairs shortest path by trying all possible paths
+    for (int k = 0;k < V;++k)	//Try all intermediate nodes
+        for (int i = 0;i < V;++i)	//Try for all possible starting position
+            for (int j = 0;j < V;++j)	//Try for all possible ending position
+            {
+                if (dist[i][k] == INT_MAX || dist[k][j] == INT_MAX)	//SKIP if K is unreachable from i or j is unreachable from k
+                    continue;
+                // dist[i][j] means direct edge from i to j
+                // dist[i][k] + dist[k][j] means distance via vertex k to reach j from i.
+                else if (dist[i][k] + dist[k][j] < dist[i][j])		//Check if new distance is shorter via vertex K
+                    dist[i][j] = dist[i][k] + dist[k][j];
+            }
+
+    //Check for negative edge weight cycle
+    for (int i = 0;i < V;++i)
+        if (dist[i][i] < 0)
+        {
+            cout << "Negative edge weight cycle is present\n";
+            return;
+        }
+
+    //Print Shortest Path Graph
+    //(Values printed as INT_MAX defines there is no path)
+    for (int i = 1;i < V;++i)
+    {
+        for (int j = 0;j < V;++j)
+            cout << i << " to " << j << " distance is " << dist[i][j] << "\n";
+        cout << "=================================\n";
+    }
 }
 
-int findPar(int u, vector<int>& parent) {
-    if (u == parent[u]) return u;
-    return parent[u] = findPar(parent[u], parent);
+int main()
+{
+    int graph[V][V] = { {0, 1, 4, INT_MAX, INT_MAX, INT_MAX},
+                        {INT_MAX, 0, 4, 2, 7, INT_MAX},
+                        {INT_MAX, INT_MAX, 0, 3, 4, INT_MAX},
+                        {INT_MAX, INT_MAX, INT_MAX, 0, INT_MAX, 4},
+                        {INT_MAX, INT_MAX, INT_MAX, 3, 0, INT_MAX},
+                        {INT_MAX, INT_MAX, INT_MAX, INT_MAX, 5, 0} };
+
+    floyd_warshall(graph);
+    return 0;
 }
 
-void unionn(int u, int v, vector<int>& parent, vector<int>& rank) {
-    u = findPar(u, parent);
-    v = findPar(v, parent);
-    if (rank[u] < rank[v]) {
-        parent[u] = v;
-    }
-    else if (rank[v] < rank[u]) {
-        parent[v] = u;
-    }
-    else {
-        parent[v] = u;
-        rank[u]++;
-    }
-}
 
-int main() {
-    int N, m;
-    cin >> N >> m;
-    vector<node> edges;
-    for (int i = 0;i < m;i++) {
-        int u, v, wt;
-        cin >> u >> v >> wt;
-        edges.push_back(node(u, v, wt));
-    }
-    sort(edges.begin(), edges.end(), comp);
 
-    vector<int> parent(N);
-    for (int i = 0;i < N;i++)
-        parent[i] = i;
-    vector<int> rank(N, 0);
 
-    int cost = 0;
-    vector<pair<int, int>> mst;
-    for (auto it : edges) {
-        if (findPar(it.v, parent) != findPar(it.u, parent)) {
-            cost += it.wt;
-            mst.push_back({ it.u, it.v });
-            unionn(it.u, it.v, parent, rank);
+
+
+// ----------------------------------------------------------------------------------------------------------------------- //
+/*
+    [accepted]
+*/
+const int INF = 1e8;
+
+void shortest_distance(vector<vector<int>>& matrix) {
+    int V = matrix.size();
+
+    for (int i = 0; i < V; i++) {
+        for (int j = 0; j < V; j++) {
+            if (matrix[i][j] == -1) {
+                matrix[i][j] = INF;
+            }
         }
     }
-    cout << cost << endl;
-    for (auto it : mst) cout << it.first << " - " << it.second << endl;
-    return 0;
+
+    for (int k = 0; k < V; k++) {
+        for (int i = 0; i < V; i++) {
+            for (int j = 0; j < V; j++) {
+                if (matrix[i][k] == INF || matrix[k][j] == INF) continue;
+                matrix[i][j] = min(matrix[i][j], matrix[i][k] + matrix[k][j]);
+            }
+        }
+    }
+
+    for (int i = 0; i < V; i++) {
+        for (int j = 0; j < V; j++) {
+            if (matrix[i][j] == INF) {
+                matrix[i][j] = -1;
+            }
+        }
+    }
 }
