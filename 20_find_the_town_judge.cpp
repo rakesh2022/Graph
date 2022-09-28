@@ -1,5 +1,6 @@
 
-https://leetcode.com/problems/find-the-town-judge/
+// https://leetcode.com/problems/find-the-town-judge/
+// similar to celebrity problem
 
 int findJudge(int N, vector<vector<int>> &trust)
 {
