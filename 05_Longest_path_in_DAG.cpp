@@ -1,7 +1,8 @@
 /*
     link: https://www.geeksforgeeks.org/find-longest-path-directed-acyclic-graph/
     logic: read intro in link
-
+    find longest path from given source to all other nodes
+    
     video: https://youtu.be/jdTnoCBSOVM
 */
 
