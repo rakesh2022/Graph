@@ -110,6 +110,5 @@ vector<int> topoSort(int V, vector<int> adj[])
             if (inDeg[i] == 0) q.push(i);
         }
     }
-
     return topoSorted;
 }
