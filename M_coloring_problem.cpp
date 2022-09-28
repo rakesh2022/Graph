@@ -8,6 +8,30 @@
 
 
 // ----------------------------------------------------------------------------------------------------------------------- //
+// DFS
+
+ return solve(m,n,0);
+    public boolean solve(int currentColor,int totalVertex,int currVertex){
+        if(currVertex==totalVertex) return true;
+        for(int i=1;i<=currentColor;i++){
+            if(isSafe(i,currVertex)){
+                color[currVertex] = i;
+                if(solve(currentColor, totalVertex, currVertex+1)){
+                    return true;
+                }
+                color[currVertex]=0;
+            }
+        }
+        return false;
+    }
+    public boolean isSafe(int currentColor, int currVertex){
+        for(int neighbour : adj.get(currVertex)){
+            if(currentColor == color[neighbour]) return false;
+        }
+        return true;
+    }
+}\
+---------------------------------------------------------------------------------------------------------------------------------------------------
 /*
     BFS
 */
