@@ -6,6 +6,8 @@
     video: https://youtu.be/75yC1vbS8S8?list=PLgUwDviBIf0rGEWe64KWas0Nryn7SCRWw
 
     djikstra's algo doesn't work for the negative edges
+   When initialising a distance array with infinite in BellMan Ford, make sure it is something 1e7, not INT MAX, to avoid integer overflow.
+    
 */
 
 
