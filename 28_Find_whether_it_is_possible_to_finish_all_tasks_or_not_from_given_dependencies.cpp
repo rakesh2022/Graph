@@ -1,6 +1,7 @@
 /*
     link: https://www.geeksforgeeks.org/find-whether-it-is-possible-to-finish-all-tasks-or-not-from-given-dependencies/
 */
+hint: Because it is a directed graph, if toposort is possible, then no cycle should exist.
 
 
 
